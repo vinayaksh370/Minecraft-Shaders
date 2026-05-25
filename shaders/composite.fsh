@@ -58,8 +58,4 @@ void main() {
 	color.rgb = make_gray(color.rgb, INTENSITY);
 
 	// color = texture(colortex0, texcoord);
-
-	
-
-	
 }
