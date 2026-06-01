@@ -1,4 +1,0 @@
-This i my first minecraft shader.
-
-The first thing i did was tweaking the lighting model
-
