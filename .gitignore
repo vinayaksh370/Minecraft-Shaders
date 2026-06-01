@@ -2,4 +2,4 @@
 # * is a wildcard meaning "anything", so *.txt ignores ALL .txt files, build/* ignores everything inside build/
 # / controls where the rule applies — leading slash means root only (/todo.txt), trailing slash means folders only (logs/)
 
-secure
+anything
