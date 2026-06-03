@@ -1,61 +1,66 @@
+// Lighting Calculations
+
 #version 330 compatibility
 
-// #define DRAW_SHADOW_MAP gcolor 
+#include "lib/distort.glsl"
 
-uniform float frameTimeCounter;
-uniform sampler2D gcolor;
-uniform sampler2D shadowcolor0;
-uniform sampler2D shadowtex0;
-uniform sampler2D shadowtex1;
+uniform sampler2D depthtex0; // for getting depth value 
+
 uniform sampler2D colortex0;
+uniform sampler2D colortex1;
+uniform sampler2D colortex2;
 
-#include "/settings.glsl"
+uniform vec3 shadowLightPosition;     // return sun or moon position in view space 
+uniform mat4 gbufferModelViewInverse; // for converting normals from view space to world/player space
 
-// varying vec2 texcoord;
-in vec2 texcoord;
+in vec2 uv;
 
-/* RENDERTARGETS: 0 */ 
-layout(location = 0) out vec4 color;
+/*
+const int colortex0Format = RGBA32F;
+const int colortex2Format = R8;
+*/
 
-vec3 make_gray(vec3 color, float amount) {
-	float average_color = dot(color.rgb, vec3(1/3.0)); 
-	color = mix(color, vec3(average_color), amount);
-	return color;
-}
+uniform sampler2D texture;
+in vec3 normal;
+
+/* RENDERTARGETS: 0 */
+layout(location = 0) out vec4 color; 
+
+const vec3 blocklightColor = vec3(1.0, 0.5, 0.08);
+const vec3 skylightColor = vec3(0.05, 0.15, 0.3);
+const vec3 sunlightColor = vec3(1.0);
+const vec3 ambientColor = vec3(0.1);
 
 void main() {
-	// vec3 color = texture2D(DRAW_SHADOW_MAP, texcoord).rgb; // legacy stuff
+
+	// Base Default Color from the color texture
+	vec4 albedo = texture2D(colortex0, uv);
 	
-	vec2 uv = texcoord;
+	// Gamma Correction
+    // albedo.rgb = pow(albedo.rgb, vec3(2.2)); // vec3(1.5) vec3(1/1.5)
 
-// /* DRAWBUFFERS:0 */
-	//gl_FragData[0] = vec4(color, 1.0); //gcolor
-	//gl_FragData[0] = vec4(1.0,0.0,0.0, 0.1); //gcolor
-	// gl_FragData[0] = vec4(uv.yyy, 1.0);//gcolor
-	// color = vec4(texcoord, 0.0, 1.0);//gcolor
+	float depth = texture2D(depthtex0, uv).r;
+	if (depth == 1.0) {
+  		// return;
+		discard; 
+	}
 
-	color = texture(colortex0, texcoord);
-	float grey_scale = dot(color.rgb, vec3(1/3.0));
+	vec2 lightMap = texture2D(colortex1, uv).rg;
+	vec3 encodedNormal = texture2D(colortex2, uv).rgb;
+	// decode normal from texture (do not shadow the vertex 'normal' input)
+	vec3 decodedNormal = normalize((encodedNormal - 0.5) * 2.0); // convert back from 0..1 to -1..1
 
-	// color.rgb = mix(color.rgb, vec3(grey_scale), 1);
+	vec3 lightVector = normalize(shadowLightPosition);
+	vec3 worldLightVector = mat3(gbufferModelViewInverse) * lightVector; // convert shadow light position from view space to world space ... normalize to get unit vector
+	
+	float theta =  clamp(dot(worldLightVector, decodedNormal), 0.0, 1.0); // 0 = blockfacing away from light, 1 = block facing towards light
+	
+	vec3 blockLight = lightMap.r * blocklightColor; // blocklight is stored in the red channel of the lightmap
+	vec3 skylight = lightMap.g * skylightColor;     // skylight is stored in the green channel of the lightmap
+	vec3 ambient = ambientColor;
+	vec3 sunlight = sunlightColor * theta * lightMap.g;
 
-	// if (grey_scale < 0.5) // turns black pixels red and white pixels green
-	// if (texcoord.x < 0.5) // turns left half of screen red and right half green
+	albedo.rgb *= blockLight + skylight + ambient + sunlight;
 
-	/*
-		if (grey_scale < 0.33) {
-			color.rgb = mix(color.rgb, vec3(1.,0.,0.), 0.5);
-		} 
-		else if(grey_scale < 0.66 && grey_scale > 0.33 ) {
-			color.rgb = mix(color.rgb, vec3(0.,1.,0.), 0.5);
-		} 
-		else if(grey_scale < 0.99 && grey_scale > 0.66) {
-			color.rgb = mix(color.rgb, vec3(0.,0.,1.), 0.5);
-		}	
-	*/
-
-	// color.rgb = vec3(grey_scale);
-	color.rgb = make_gray(color.rgb, INTENSITY);
-
-	// color = texture(colortex0, texcoord);
+	color = vec4(albedo.rgb, 1.0);
 }
