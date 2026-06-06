@@ -1,6 +1,6 @@
 #version 330 compatibility
 
-uniform mat4 gbufferModelViewInverse; 
+uniform mat4 gbufferModelViewInverse; // Inverse of the modelview matrix used for the gbuffer pass, used to convert normals from view space to world/player space
 
 out vec2 uv; //texcoord
 out vec3 normal;
