@@ -1,9 +1,12 @@
 #version 330 compatibility
 
 #include "lib/distort.glsl"
+#include "settings.glsl"
 
+// This declaration is for iris to read and set the buffer...prevents loss of color values if you write linear colors to colortex [they take gamma corrected values usually]
 /*
 const int colortex0Format = RGBA32F;
+const float shadowDistanceRenderMul = 1.0;
 */
 
 uniform sampler2D colortex0;
@@ -18,8 +21,8 @@ void main() {
 	vec3 albedo = texture(colortex0, uv).rgb;
 
 	// Gamma Correction
-    albedo.rgb = pow(albedo.rgb, vec3(1/2.2));
-    // albedo.rgb = pow(albedo.rgb, vec3(1.5));
+    albedo.rgb = pow(albedo.rgb, vec3(1/FINAL_GAMMA));
+    // albedo.rgb = pow(albedo.rgb, vec3(FINAL_GAMMA));
 
     color = vec4(albedo, 1.0);
 }
