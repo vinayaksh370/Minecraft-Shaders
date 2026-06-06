@@ -1,14 +1,21 @@
-#version 120
+#version 330 compatibility
 
-uniform sampler2D lightmap;
-uniform sampler2D texture;
+// const int shadowMapResolution = 4096;
+const int shadowMapResolution = 2048;
+// const int shadowMapResolution = 1024;
 
-varying vec2 lmcoord;
-varying vec2 texcoord;
-varying vec4 glcolor;
+uniform sampler2D gtexture;
 
-void main() {
-	vec4 color = texture2D(texture, texcoord) * glcolor;
+in vec2 uv;
+in vec4 glcolor;
 
-	gl_FragData[0] = color;
+layout(location = 0) out vec4 color;
+
+void main()
+{
+    color = texture(gtexture, uv) * glcolor;
+
+    if(color.a < 0.1) {
+        discard;
+    }
 }
