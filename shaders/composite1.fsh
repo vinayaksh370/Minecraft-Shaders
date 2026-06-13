@@ -29,7 +29,7 @@ void main() {
 
     float depth = texture(depthtex0, uv).r;
 
-    // if (depth == 1.0) return;
+    if (depth == 1.0) return;
 
     vec3 normal = texture(colortex2, uv).rgb;
     bool isTerrain = length(normal - vec3(0.5)) > 0.01;
