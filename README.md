@@ -27,4 +27,3 @@ I may add some more functionality in the future.
 - ACES Tone Mapping  
 - Gamma Correction
 
-// Inspired by / learned from Complementary Unbound Shaders (Complementary Development) — [https://www.complementary.dev/](https://www.complementary.dev/shaders/)
